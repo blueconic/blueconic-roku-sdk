@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="BlueConicTask" extends="Task" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+    <interface>
+        <field id="flushUpdates" type="boolean" alwaysNotify="true" />
+        <field id="request" type="assocarray" alwaysNotify="true" />
+        <field id="response" type="assocarray" alwaysNotify="true" />
+        <field id="subscribeHandler" type="assocarray" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/source/blueconic/BlueConicSDK.brs" />
+    <script type="text/brightscript" uri="pkg:/source/blueconic/util/BCLogger.brs" />
+    <script type="text/brightscript" uri="pkg:/source/blueconic/storage/BCStorageManager.brs" />
+    <script type="text/brightscript" uri="pkg:/source/blueconic/storage/BCCache.brs" />
+    <script type="text/brightscript" uri="pkg:/source/blueconic/profile/BCProfile.brs" />
+    <script type="text/brightscript" uri="pkg:/source/blueconic/plugins/BCVisitListener.brs" />
+    <script type="text/brightscript" uri="pkg:/source/blueconic/plugins/BCPropertiesBasedDialogue.brs" />
+    <script type="text/brightscript" uri="pkg:/source/blueconic/plugins/BCPreferredHourListener.brs" />
+    <script type="text/brightscript" uri="pkg:/source/blueconic/plugins/BCPluginsManager.brs" />
+    <script type="text/brightscript" uri="pkg:/source/blueconic/plugins/BCGlobalListener.brs" />
+    <script type="text/brightscript" uri="pkg:/source/blueconic/events/BCEventManager.brs" />
+    <script type="text/brightscript" uri="pkg:/source/blueconic/connection/BCResponse.brs" />
+    <script type="text/brightscript" uri="pkg:/source/blueconic/connection/BCRequest.brs" />
+    <script type="text/brightscript" uri="pkg:/source/blueconic/connection/BCNetworkManager.brs" />
+    <script type="text/brightscript" uri="pkg:/source/blueconic/connection/BCCommitLog.brs" />
+    <script type="text/brightscript" uri="pkg:/components/blueconic/BlueConicTask.brs" />
+    <script type="text/brightscript" uri="pkg:/source/bslib.brs" />
+    <children />
+</component>
