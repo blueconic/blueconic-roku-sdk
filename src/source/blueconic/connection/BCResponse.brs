@@ -278,7 +278,7 @@ function __BCResponseParser_builder()
     ' @param response: The response object containing the profile data
     ' @param profile: The profile object to update
     ' @return: True if the profile was successfully updated, otherwise false
-    instance.handleGetProfileResponse = function(response as object, profile as object) as boolean
+    instance.handleGetProfileResponse = function(response as object, client as object) as boolean
         if response = invalid
             return false
         end if
@@ -292,12 +292,14 @@ function __BCResponseParser_builder()
             return false
         end if
         BCLogInfo("DomainGroupId: " + domainGroupId)
-        profile.setDomainGroup(domainGroupId)
+        client.profile().setDomainGroup(domainGroupId)
+        zoneId = map["zoneId"]
+        client.setZoneId(zoneId)
         profileId = map["profileId"]
         if profileId = invalid or profileId = ""
             return false
         else
-            return m.handleProfileId(profileId, profile)
+            return m.handleProfileId(profileId, client.profile())
         end if
     end function
     ' Method to handle the response for setting a profile ID
@@ -376,7 +378,8 @@ function __BCResponseParser_builder()
         instances = []
         interactions = response.interactions
         for each interactionEntry in interactions
-            pluginClass = client._pluginsManager.getPlugin(interactionEntry.interactionTypeId)
+            pluginClass = client._pluginsManager.getPlugin(interactionEntry.interactionTypeId, interactionEntry.dialogueId)
+            print interactionEntry
             if pluginClass = invalid
                 BCLogWarning("Plugin class '" + interactionEntry.pluginClass + "' not found for type id '" + interactionEntry.interactionTypeId + " and id '" + interactionEntry.id + "'")
             else

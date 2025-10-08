@@ -12,7 +12,7 @@ function __BCPropertiesBasedDialogue_builder()
         m.super0_new()
     end sub
     instance.super0_onLoad = instance.onLoad
-    instance.onLoad = function()
+    instance.onLoad = sub()
         config = "{}"
         if m._interactionContext.getParameters()["config"] <> invalid and m._interactionContext.getParameters()["config"].Count() > 0
             config = m._interactionContext.getParameters()["config"][0]
@@ -27,10 +27,10 @@ function __BCPropertiesBasedDialogue_builder()
         if frontendViewCount <> "" and frontendViewCount = "always"
             m._client.createViewEvent(m._interactionContext.getInteractionId(), {})
         end if
-    end function
+    end sub
     instance.super0_onDestroy = instance.onDestroy
-    instance.onDestroy = function()
-    end function
+    instance.onDestroy = sub()
+    end sub
     ' Replaces tokens in the configuration string with values from the profile.
     '
     ' @param config The configuration string containing tokens to be replaced.

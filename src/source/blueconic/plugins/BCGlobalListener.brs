@@ -56,13 +56,13 @@ function __BCGLobalListener_builder()
     ' CTV specific properties (for global listener).
     ' Readable data to be used as the origin.
     instance.super0_onLoad = instance.onLoad
-    instance.onLoad = function()
+    instance.onLoad = sub()
         m._setSystemInformation()
         m._setStatistics()
-    end function
+    end sub
     instance.super0_onDestroy = instance.onDestroy
-    instance.onDestroy = function()
-    end function
+    instance.onDestroy = sub()
+    end sub
     ' Method to set the system information, app information, and origin.
     instance._setSystemInformation = sub()
         m._setDeviceInformation()
@@ -249,14 +249,14 @@ function __BCGLobalListener_builder()
         visits = val(visitsValue)
         nowInMillis = CreateObject("roDateTime").asSecondsLong() * 1000
         expire = lastVisitDate + (m._VISIT_EXPIRE_INTERVAL * 60 * 1000)
-        propertyValuesToIncrement[m._CLICK_COUNT] = "1"
+        propertyValuesToIncrement[m._CLICK_COUNT] = 1
         if nowInMillis > expire or visits = 0
             propertyValuesToSet[m._VISIT_CLICKS] = [
                 "1"
             ]
-            propertyValuesToIncrement[m._VISITS] = "1"
+            propertyValuesToIncrement[m._VISITS] = 1
         else
-            propertyValuesToIncrement[m._VISIT_CLICKS] = "1"
+            propertyValuesToIncrement[m._VISIT_CLICKS] = 1
         end if
         propertyValuesToSet[m._LAST_VISIT_DATE] = [
             nowInMillis.toStr()

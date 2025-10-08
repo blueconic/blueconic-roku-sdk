@@ -41,7 +41,7 @@ function __BCVisitListener_builder()
     end sub
     ' Visit listener property keys
     instance.super0_onLoad = instance.onLoad
-    instance.onLoad = function()
+    instance.onLoad = sub()
         m.visitHistoryProperty = "_vl_" + m._interactionContext.getInteractionId()
         ' property which will hold the visit timestamps
         m.visitsProperty = m._getParameterValue(m.VISITS_PROPERTY)
@@ -84,10 +84,10 @@ function __BCVisitListener_builder()
             m.directVisitsOnly = (LCase(value) = "true")
         end if
         m._handleNewPageView()
-    end function
+    end sub
     instance.super0_onDestroy = instance.onDestroy
-    instance.onDestroy = function()
-    end function
+    instance.onDestroy = sub()
+    end sub
     ' Handles a new page view event.
     instance._handleNewPageView = sub()
         ' Get current time

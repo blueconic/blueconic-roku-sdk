@@ -8,7 +8,6 @@
 'import "pkg:/source/blueconic/storage/BCCache.bs"
 'import "pkg:/source/blueconic/connection/BCNetworkManager.bs"
 'import "pkg:/source/blueconic/connection/BCRequest.bs"
-'import "pkg:/source/blueconic/connection/BCRequest.bs"
 'import "pkg:/source/blueconic/connection/BCResponse.bs"
 'import "pkg:/source/blueconic/connection/BCCommitLog.bs"
 'import "pkg:/source/blueconic/profile/BCProfile.bs"
@@ -18,13 +17,20 @@
 'import "pkg:/source/blueconic/plugins/BCPreferredHourListener.bs"
 'import "pkg:/source/blueconic/plugins/BCVisitListener.bs"
 'import "pkg:/source/blueconic/plugins/BCPropertiesBasedDialogue.bs"
+'import "pkg:/source/blueconic/plugins/service/BCEventServiceBase.bs"
+'import "pkg:/source/blueconic/plugins/BCEngagementScoreListener.bs"
+'import "pkg:/source/blueconic/plugins/service/BCEngagementService.bs"
+'import "pkg:/source/blueconic/plugins/BCBehaviorListener.bs"
+'import "pkg:/source/blueconic/plugins/service/BCEnrichByBehaviorService.bs"
+'import "pkg:/source/blueconic/plugins/BCEngagementRankingListener.bs"
+'import "pkg:/source/blueconic/plugins/BCRecommendationsDialogue.bs"
 'import "pkg:/source/blueconic/util/BCLogger.bs"
 
 ' BCConstants is a function that returns an object containing constants used throughout the BlueConic SDK.
 '
 ' @return An object containing SDK version, user agent, storage keys, events, and parameters.
 function BCConstants() as object
-    SDK_VERSION = "1.0.0"
+    SDK_VERSION = "1.1.0"
     SDK_DATA = {
         SDK_VERSION: SDK_VERSION
         USER_AGENT: "BlueConic Roku SDK " + SDK_VERSION
@@ -163,7 +169,8 @@ function __BlueConicClientImpl_builder()
         m._enabled = false
         m._screenName = invalid
         m._storageManager = invalid
-        m._networkManager = invalid
+        m._rpcConnector = invalid
+        m._restConnector = invalid
         m._constants = invalid
         m._commitLog = invalid
         m._requestLog = invalid
@@ -175,6 +182,7 @@ function __BlueConicClientImpl_builder()
         m._flushTimer = invalid
         m._simulatorData = {}
         m._segments = []
+        m._zoneId = invalid
         m.blueConicTask = task
     end function
     ' Initializes the BlueConic client with the provided configuration and global node.
@@ -186,6 +194,7 @@ function __BlueConicClientImpl_builder()
             BCLogWarning("BlueConic client is already enabled.")
             return
         end if
+        m._configuration = configuration
         if configuration.isDebugMode
             BCLogInfo("BlueConic SDK is in debug mode.")
         end if
@@ -201,7 +210,8 @@ function __BlueConicClientImpl_builder()
         end if
         m._hostname = configuration.hostname
         m._storageManager = BCStorageManager()
-        m._networkManager = BCNetworkManager()
+        m._rpcConnector = BCRPCConnector()
+        m._restConnector = BCRESTConnector()
         m._constants = BCConstants()
         m._screenName = ""
         m._commitLog = BCCommitLog()
@@ -288,6 +298,12 @@ function __BlueConicClientImpl_builder()
             end if
         end for
         return false
+    end function
+    ' Sets the zone ID for the BlueConic client.
+    '
+    ' @param zoneId The zone ID to set. Can be a string or invalid.
+    instance.setZoneId = function(zoneId as dynamic)
+        m._zoneId = zoneId
     end function
     ' Returns the profile object associated with the BlueConic client.
     instance.profile = function() as object
@@ -419,6 +435,22 @@ function __BlueConicClientImpl_builder()
         m._commitLog.createTimelineEvent(eventType, parameters)
         m.sendUpdates()
     end sub
+    instance.createRecommendationsEvent = sub(storeId as string, action as string, itemIds as object)
+        if storeId = ""
+            BCLogError("Store ID is empty. In order to send a recommendation event, a store ID is required.")
+            return
+        end if
+        parameters = {
+            profileId: m._profile.getId()
+            storeId: storeId
+            action: action
+            itemId: itemIds
+        }
+        conCommands = BCRestConnectorCommands()
+        createRecommendationsEventCommand = conCommands.createRecommendationsEventCommand(parameters)
+        response = m._restConnector.execute(m._hostname, m._zoneId, createRecommendationsEventCommand)
+        BCLogInfo("Create recommendation event response: " + response)
+    end sub
     ' Sets the simulator data for the BlueConic client.
     '
     ' @param simulatorUsername The username for the simulator.
@@ -456,7 +488,7 @@ function __BlueConicClientImpl_builder()
     ' Sends updates to the BlueConic server based on the current commit log and request log.
     instance.sendUpdates = sub()
         reload = false
-        conCommands = BCConnectorCommands()
+        conCommands = BCRPCConnectorCommands()
         commands = []
         m.eventManager().clearEvents()
         m._requestLog.mergeCommitLog(m._commitLog)
@@ -491,9 +523,9 @@ function __BlueConicClientImpl_builder()
         propertiesIds = m._profile.cache.getPropertiesIds()
         getPropertiesCommand = conCommands.getGetPropertiesCommand(hash, propertiesIds)
         commands.push(getPropertiesCommand)
-        responses = m._networkManager.execute(m._appId, m._hostname, commands, m._profile.getDomainGroup(), m._simulatorData, m.getScreenName())
+        responses = m._rpcConnector.execute(m._appId, m._hostname, m._zoneId, commands, m._profile.getDomainGroup(), m._simulatorData, m.getScreenName())
         responseParserObj = BCResponseParser()
-        reload = responseParserObj.handleGetProfileResponse(responses.getById(getProfileCommand.id), m._profile)
+        reload = responseParserObj.handleGetProfileResponse(responses.getById(getProfileCommand.id), m)
         responseParserObj.handleGetPropertiesResponse(responses.getById(getPropertiesCommand.id), m._profile)
         m._requestLog.clearAll()
         if reload
@@ -509,7 +541,7 @@ function __BlueConicClientImpl_builder()
     instance._getInteractions = function(eventType as string, screenName as string, properties as object) as object
         reload = false
         isPageview = eventType = BCConstants().EVENTS.PAGEVIEW
-        conCommands = BCConnectorCommands()
+        conCommands = BCRPCConnectorCommands()
         commands = []
         getProfileCommand = invalid
         getPropertiesCommand = invalid
@@ -523,10 +555,10 @@ function __BlueConicClientImpl_builder()
             commands.push(getPropertiesCommand)
         end if
         commands.push(getInteractionsCommand)
-        responses = m._networkManager.execute(m._appId, m._hostname, commands, "DEFAULT", m._simulatorData, screenName)
+        responses = m._rpcConnector.execute(m._appId, m._hostname, m._zoneId, commands, "DEFAULT", m._simulatorData, screenName)
         responseParserObj = BCResponseParser()
         if isPageview and getProfileCommand <> invalid and getPropertiesCommand <> invalid
-            reload = responseParserObj.handleGetProfileResponse(responses.getById(getProfileCommand.id), m._profile)
+            reload = responseParserObj.handleGetProfileResponse(responses.getById(getProfileCommand.id), m)
             responseParserObj.handleGetPropertiesResponse(responses.getById(getPropertiesCommand.id), m._profile)
         end if
         interactions = responseParserObj.handleGetInteractionsResponse(responses.getById(getInteractionsCommand.id), m)
@@ -564,6 +596,12 @@ function __BlueConicClientImpl_builder()
             end if
         end if
         return ""
+    end function
+    instance._getRecommendations = function(requestParameters as object) as string
+        conCommands = BCRestConnectorCommands()
+        getRecommendationsCommand = conCommands.getRecommendationsCommand(requestParameters)
+        response = m._restConnector.execute(m._hostname, m._zoneId, getRecommendationsCommand)
+        return response
     end function
     return instance
 end function

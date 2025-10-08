@@ -194,18 +194,15 @@ function __BCProfile_builder()
     '
     ' @param property The property to increment.
     ' @param value The value to increment by.
-    instance.incrementValue = sub(property as string, value as string)
+    instance.incrementValue = sub(property as string, value as integer)
         if not m.client.isEnabled()
             return
         end if
-        if property = "" or value = ""
+        if property = ""
             return
         end if
-        numberValue = Val(value)
-        if not (Type(numberValue) = "Float" or Type(numberValue) = "Integer" or Type(numberValue) = "roFloat" or Type(numberValue) = "roInteger")
-            return
-        end if
-        m.client._commitLog.incrementProperty(property, value)
+        valueStr = value.toStr()
+        m.client._commitLog.incrementProperty(property, valueStr)
         m.client.scheduleSendUpdates()
     end sub
     ' Method to reset state
@@ -235,15 +232,15 @@ function __BCProfile_builder()
         if not m.client.isEnabled()
             return
         end if
-        conCommands = BCConnectorCommands()
+        conCommands = BCRPCConnectorCommands()
         commands = []
         getProfileCommand = conCommands.getProfileCommand()
         commands.push(getProfileCommand)
         getPropertiesCommand = conCommands.getGetPropertiesCommand("", invalid)
         commands.push(getPropertiesCommand)
-        responses = m.client._networkManager.execute(m.client._appId, m.client._hostname, commands, m.getDomainGroup(), m.client._simulatorData)
+        responses = m.client._rpcConnector.execute(m.client._appId, m.client._hostname, m.client._zoneId, commands, m.getDomainGroup(), m.client._simulatorData)
         responseParserObj = BCResponseParser()
-        responseParserObj.handleGetProfileResponse(responses.getById(getProfileCommand.id), m)
+        responseParserObj.handleGetProfileResponse(responses.getById(getProfileCommand.id), m.client)
         getPropertiesResponse = responses.getById(getPropertiesCommand.id)
         if getPropertiesResponse <> invalid
             responseParserObj.handleGetPropertiesResponse(getPropertiesResponse, m)
@@ -255,11 +252,11 @@ function __BCProfile_builder()
         if not m.client.isEnabled()
             return
         end if
-        conCommands = BCConnectorCommands()
+        conCommands = BCRPCConnectorCommands()
         commands = []
         deleteProfileCommand = conCommands.deleteProfileCommand()
         commands.push(deleteProfileCommand)
-        responses = m.client._networkManager.execute(m.client._appId, m.client._hostname, commands, m.getDomainGroup(), m.client._simulatorData)
+        responses = m.client._rpcConnector.execute(m.client._appId, m.client._hostname, m.client._zoneId, commands, m.getDomainGroup(), m.client._simulatorData)
         responseParserObj = BCResponseParser()
         responseParserObj.handleDeleteProfileResponse(responses.getById(deleteProfileCommand.id), m)
         m.clearProfileId()

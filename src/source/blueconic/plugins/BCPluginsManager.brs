@@ -24,30 +24,34 @@ function __BCPluginsManager_builder()
     '
     ' @param className The class name of the plugin to retrieve.
     ' @return The plugin object if found, otherwise invalid.
-    instance.getPlugin = function(className as string) as object
+    instance.getPlugin = function(className as string, id as string) as object
         if m._plugins[className] <> invalid
             return m._plugins[className]
         end if
+        plugin = invalid
         if className = ""
             return invalid
         else if className = "listenerinteractiontype"
-            globalListener = BCGlobalListener()
-            return globalListener
+            plugin = BCGlobalListener()
         else if className = "listener_preferred_hour"
-            preferredHourListener = BCPreferredHourListener()
-            return preferredHourListener
+            plugin = BCPreferredHourListener()
         else if className = "dialogue_properties_based"
-            propertiesBasedDialogue = BCPropertiesBasedDialogue()
-            return propertiesBasedDialogue
+            plugin = BCPropertiesBasedDialogue()
         else if className = "visitlistener"
-            visitListener = BCVisitListener()
-            return visitListener
-        else if className = "EngagementScoreListener"
-            'TODO Implement in the ScoreListener ticket
-        else if className = "BehaviorListener"
-            'TODO Implement in the BehaviorListener ticket
+            plugin = BCVisitListener()
+        else if className = "engagement_score"
+            plugin = BCEngagementScoreListener()
+        else if className = "enrichprofilebyvisitorbehavior"
+            plugin = BCBehaviorListener()
+        else if className = "engagement_interest_ranking"
+            plugin = BCEngagementRankingListener()
+        else if className = "dialogue_recommendations"
+            plugin = BCRecommendationsDialogue()
         end if
-        return invalid
+        if plugin <> invalid
+            m.registerPluginClass(plugin, className + "-" + id)
+        end if
+        return plugin
     end function
     ' Destroys all current interactions and their associated plugins.
     instance.destroyPlugins = sub()
@@ -95,10 +99,10 @@ function __BCPlugin_builder()
         m._interactionContext = interactionContext
         return m
     end function
-    instance.onLoad = function()
-    end function
-    instance.onDestroy = function()
-    end function
+    instance.onLoad = sub()
+    end sub
+    instance.onDestroy = sub()
+    end sub
     return instance
 end function
 function BCPlugin()

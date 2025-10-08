@@ -98,6 +98,9 @@ sub handleRequest(request as object)
     else if request.requestType = "createTimelineEventById"
         m.blueConicClient.createTimelineEventById(request.eventId, request.eventType, request.eventDate, request.properties)
         responseData.success = true
+    else if request.requestType = "createRecommendationsEvent"
+        m.blueConicClient.createRecommendationsEvent(request.storeId, request.action, request.itemIds)
+        responseData.success = true
     else if request.requestType = "getId"
         profileId = m.blueConicClient.profile().getId()
         responseData.profileId = profileId
@@ -181,13 +184,13 @@ sub handleRequest(request as object)
         m.blueConicClient.eventManager().publishAdvancedEvent(request.eventName, request.context)
         responseData.success = true
     else if request.requestType = "publishClickEvent"
-        m.blueConicClient.eventManager().publishAdvancedEvent(request.selector, request.context)
+        m.blueConicClient.eventManager().publishClickEvent(request.selector, request.context)
         responseData.success = true
     else if request.requestType = "publishUpdateContentEvent"
-        m.blueConicClient.eventManager().publishAdvancedEvent(request.content, request.selector)
+        m.blueConicClient.eventManager().publishUpdateContentEvent(request.content, request.selector)
         responseData.success = true
     else if request.requestType = "publishUpdateValuesEvent"
-        m.blueConicClient.eventManager().publishAdvancedEvent(request.selector, request.values)
+        m.blueConicClient.eventManager().publishUpdateValuesEvent(request.selector, request.values)
         responseData.success = true
     else if request.requestType = "subscribe"
         m.blueConicClient.eventManager().subscribe(request.eventName, sub(event as object)

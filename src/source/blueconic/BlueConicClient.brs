@@ -110,6 +110,15 @@ function __BlueConicClient_builder()
             requestId: m._getNextRequestId()
         }
     end sub
+    instance.createRecommendationsEvent = sub(storeId as string, action as string, itemIds as object)
+        m._task.request = {
+            requestType: "createRecommendationsEvent"
+            storeId: storeId
+            action: action
+            itemIds: itemIds
+            requestId: m._getNextRequestId()
+        }
+    end sub
     ' Returns the profile object for managing user profile data.
     '
     ' @return An object representing the user profile.
@@ -300,7 +309,7 @@ function __BlueConicClient_builder()
                 '
                 ' @param property The property for which the value should be incremented.
                 ' @param value The value to increment for the property.
-                incrementValue: function(property as string, value as string)
+                incrementValue: function(property as string, value as integer)
                     m._parent._task.request = {
                         requestType: "incrementValue"
                         property: property

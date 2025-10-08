@@ -4,8 +4,8 @@
 ' $HeadURL$
 '
 ' Copyright 2014 BlueConic Inc./BlueConic B.V. All rights reserved.
-' Class to handle BlueConic request commands
-function __BCConnectorCommands_builder()
+' Class to handle BlueConic RPC request commands
+function __BCRPCConnectorCommands_builder()
     instance = {}
     instance.new = sub()
     end sub
@@ -245,8 +245,86 @@ function __BCConnectorCommands_builder()
     end function
     return instance
 end function
-function BCConnectorCommands()
-    instance = __BCConnectorCommands_builder()
+function BCRPCConnectorCommands()
+    instance = __BCRPCConnectorCommands_builder()
+    instance.new()
+    return instance
+end function
+' Class to handle BlueConic REST request commands
+function __BCRestConnectorCommands_builder()
+    instance = {}
+    instance.new = sub()
+    end sub
+    ' Method to get recommendations command
+    '
+    ' @return: The get recommendations command object
+    instance.getRecommendationsCommand = function(requestParameters as object) as object
+        queryParameters = m._getQueryParameters(requestParameters)
+        postData = m._getPostData(requestParameters)
+        return m._requestCommand("POST", queryParameters, postData, "recommendations")
+    end function
+    ' Method to get create recommendation event command
+    '
+    ' @return: The create recommendation event command object
+    instance.createRecommendationsEventCommand = function(requestParameters as object) as object
+        queryParameters = m._getQueryParameters(requestParameters)
+        return m._requestCommand("GET", queryParameters, "", "recommendations", "stats")
+    end function
+    ' Method to get query parameters from request parameters
+    '
+    ' @param requestParameters: The request parameters map
+    ' @return: A map of query parameters with string values
+    instance._getQueryParameters = function(requestParameters as object) as object
+        params = {}
+        for each key in requestParameters
+            if key <> "request"
+                if Type(requestParameters[key]) = "roArray"
+                    params[key] = FormatJson(requestParameters[key])
+                else
+                    params[key] = requestParameters[key].toStr()
+                end if
+            end if
+        end for
+        return params
+    end function
+    ' Method to get POST data from request parameters
+    '
+    ' @param requestParameters: The request parameters map
+    ' @return: JSON string representation of the request data
+    instance._getPostData = function(requestParameters as object) as string
+        data = requestParameters["request"]
+        jsonArray = []
+        if Type(data) = "roArray"
+            for each item in data
+                if Type(item) = "roAssociativeArray"
+                    jsonArray.push(item)
+                else
+                    jsonArray.push(item)
+                end if
+            end for
+        end if
+        return FormatJson(jsonArray)
+    end function
+    ' Method to create request command
+    '
+    ' @param methodName: The name of the method to call
+    ' @param parameters: The parameters for the method (optional)
+    ' @param nestedParameters: Nested parameters for the method (optional)
+    ' @return: The command object for the request
+    instance._requestCommand = function(method as string, queryParameters as object, postBody as string, path as string, subPath = "" as string) as object
+        commandObj = {
+            method: method
+            queryParameters: queryParameters
+            postBody: postBody
+            path: path
+            subPath: subPath
+        }
+        return commandObj
+    end function
+    return instance
+end function
+function BCRestConnectorCommands()
+    instance = __BCRestConnectorCommands_builder()
     instance.new()
     return instance
 end function

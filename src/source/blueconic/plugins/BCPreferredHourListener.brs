@@ -19,7 +19,7 @@ function __BCPreferredHourListener_builder()
     end sub
     ' Constants
     instance.super0_onLoad = instance.onLoad
-    instance.onLoad = function()
+    instance.onLoad = sub()
         propertyJson = m._getParameterValue(m._PARAMETER_PROPERTY)
         locale = m._getParameterValue(m._PARAMETER_LOCALE)
         if propertyJson <> invalid
@@ -52,10 +52,10 @@ function __BCPreferredHourListener_builder()
                 end if
             end if
         end if
-    end function
+    end sub
     instance.super0_onDestroy = instance.onDestroy
-    instance.onDestroy = function()
-    end function
+    instance.onDestroy = sub()
+    end sub
     ' Returns the time frame for the given hour in the specified locale.
     '
     ' @param hour The hour for which to get the time frame.

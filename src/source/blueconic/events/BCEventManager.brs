@@ -89,6 +89,12 @@ function __BCEventManager_builder()
     instance.publishUpdateValuesEvent = sub(selector as string, values as object)
         m.publish(BCUpdateValuesEvent(selector, values))
     end sub
+    ' Clears the event handler mapping for a listener UUID
+    '
+    ' @param uuid The unique identifier of the listener whose event handlers should be cleared.
+    instance.clearEventHandlers = sub(uuid as string)
+        m._handlerRegistry.removeHandlerByUUID(uuid)
+    end sub
     ' Handles a specific event by invoking the registered handlers.
     '
     ' @param event The event to be handled.
@@ -465,5 +471,34 @@ end function
 function BCPropertiesDialogueEvent(variantId as string, position as string, data as string)
     instance = __BCPropertiesDialogueEvent_builder()
     instance.new(variantId, position, data)
+    return instance
+end function
+' This class represents a recommendations dialogue event in BlueConic, which includes a variant ID, position, store id, and recommendations.
+function __BCRecommendationsDialogueEvent_builder()
+    instance = __BCEvent_builder()
+    ' Constructor.
+    '
+    ' @param variantId The ID of the variant associated with the properties dialogue.
+    ' @param position The position of the properties dialogue.
+    ' @param storeId The store ID associated with the properties dialogue.
+    ' @param recommendations The recommendations associated with the properties dialogue. If not provided, it defaults to an empty string.
+    instance.super0_new = instance.new
+    instance.new = function(variantId as string, position as string, storeId as string, recommendations as string)
+        m.super0_new()
+        m.variantId = invalid
+        m.position = invalid
+        m.storeId = invalid
+        m.recommendations = invalid
+        m.name = "recommendationsDialogueEvent"
+        m.variantId = variantId
+        m.position = position
+        m.storeId = storeId
+        m.recommendations = recommendations
+    end function
+    return instance
+end function
+function BCRecommendationsDialogueEvent(variantId as string, position as string, storeId as string, recommendations as string)
+    instance = __BCRecommendationsDialogueEvent_builder()
+    instance.new(variantId, position, storeId, recommendations)
     return instance
 end function
