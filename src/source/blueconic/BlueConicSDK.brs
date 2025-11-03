@@ -30,7 +30,7 @@
 '
 ' @return An object containing SDK version, user agent, storage keys, events, and parameters.
 function BCConstants() as object
-    SDK_VERSION = "1.1.0"
+    SDK_VERSION = "1.1.1"
     SDK_DATA = {
         SDK_VERSION: SDK_VERSION
         USER_AGENT: "BlueConic Roku SDK " + SDK_VERSION

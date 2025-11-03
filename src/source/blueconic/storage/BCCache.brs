@@ -46,6 +46,15 @@ function __BCCache_builder()
     ' @param key The key for the property.
     ' @param value The value to set for the property.
     instance.setProperties = sub(key as string, value as object)
+        if m.properties = invalid or Type(m.properties) <> "roAssociativeArray"
+            m.properties = {}
+        end if
+        if key = invalid or key = ""
+            return
+        end if
+        if value = invalid
+            return
+        end if
         m.properties[key] = value
         m.saveCache()
     end sub

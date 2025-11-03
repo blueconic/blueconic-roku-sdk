@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 `BlueConicClient` adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] 2025-11-03
+
+### Fixed
+ - Fixed a crash happening when trying to save certain profile properties to the cache.
+
 ## [1.1.0] 2025-10-08
 
 ### Added

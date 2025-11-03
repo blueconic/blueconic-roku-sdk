@@ -356,10 +356,30 @@ function __BCResponseParser_builder()
         if response = invalid
             return
         end if
+        if profile = invalid
+            BCLogWarning("Profile is invalid, cannot update properties")
+            return
+        end if
+        if profile.cache = invalid
+            BCLogWarning("Profile cache is invalid, cannot update properties")
+            return
+        end if
+        if response.properties = invalid or Type(response.properties) <> "roAssociativeArray"
+            BCLogWarning("Response properties is invalid or not an associative array")
+            return
+        end if
         properties = response.properties
+        if properties.keys() = invalid or properties.keys().count() = 0
+            BCLogInfo("No properties to update")
+            return
+        end if
         for each key in properties
             value = properties[key]
-            profile.cache.setProperties(key, value)
+            if key <> invalid and key <> "" and Type(key) = "roString" and value <> invalid then
+                profile.cache.setProperties(key, value)
+            else
+                BCLogWarning("Skipping invalid property key: " + FormatJson(key))
+            end if
         end for
         BCLogInfo("Updated properties: " + properties.keys().join(", "))
     end sub
