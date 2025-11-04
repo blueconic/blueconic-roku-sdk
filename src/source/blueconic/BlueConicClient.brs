@@ -541,6 +541,12 @@ sub onCommandResponse(event as object)
     response = event.getData()
     if response <> invalid and response.requestId <> invalid
         requestId = response.requestId.toStr()
+        if m.blueConicClient = invalid
+            return
+        end if
+        if m.blueConicClient._callbacks = invalid
+            return
+        end if
         if m.blueConicClient._callbacks[requestId] <> invalid
             callback = m.blueConicClient._callbacks[requestId]
             m.blueConicClient._callbacks.delete(requestId)
@@ -558,6 +564,12 @@ sub onHandlerResponse(event as object)
     if response <> invalid and response.handledByIdentifiers <> invalid
         identifier = response.handledByIdentifiers[0]
         onlyOnce = response.onlyOnce
+        if m.blueConicClient = invalid
+            return
+        end if
+        if m.blueConicClient._subscribeHandlers = invalid
+            return
+        end if
         if m.blueConicClient._subscribeHandlers[identifier] <> invalid
             handler = m.blueConicClient._subscribeHandlers[identifier]
             handler(response.eventData)

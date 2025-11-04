@@ -49,7 +49,11 @@ function __BCPluginsManager_builder()
             plugin = BCRecommendationsDialogue()
         end if
         if plugin <> invalid
-            m.registerPluginClass(plugin, className + "-" + id)
+            if id <> invalid and id <> ""
+                m.registerPluginClass(plugin, className + "-" + id)
+            else
+                m.registerPluginClass(plugin, className)
+            end if
         end if
         return plugin
     end function

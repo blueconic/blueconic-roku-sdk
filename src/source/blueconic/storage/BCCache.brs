@@ -24,9 +24,26 @@ function __BCCache_builder()
     '
     ' @return A new cache object.
     instance.createCache = function() as object
+        if m.storageManager = invalid
+            BCLogWarning("Storage manager is invalid, cannot create cache")
+            m.properties = {}
+            return m
+        end if
         m.properties = m.storageManager.readDataJSON(BCConstants().STORAGE.BC_PROFILE_PROPERTIES_NAME, BCConstants().STORAGE.CACHE, {})
+        if m.properties = invalid
+            m.properties = {}
+        end if
         return m
     end function
+    ' Saves the current state of the cache.
+    instance.saveCache = sub()
+        if m.storageManager = invalid
+            BCLogWarning("Storage manager is invalid, cannot save cache")
+            return
+        end if
+        m.storageManager.saveData(BCConstants().STORAGE.BC_DOMAIN_GROUP_NAME, m.domainGroup, BCConstants().STORAGE.CACHE)
+        m.storageManager.saveDataJSON(BCConstants().STORAGE.BC_PROFILE_PROPERTIES_NAME, m.properties, BCConstants().STORAGE.CACHE)
+    end sub
     ' Retrieves the domain group from the cache.
     '
     ' @return The domain group associated with the cache.
@@ -63,16 +80,18 @@ function __BCCache_builder()
         m.properties = {}
         m.storageManager.deleteData(BCConstants().STORAGE.BC_PROFILE_PROPERTIES_NAME, BCConstants().STORAGE.CACHE)
     end sub
-    ' Saves the current state of the cache.
-    instance.saveCache = sub()
-        m.storageManager.saveData(BCConstants().STORAGE.BC_DOMAIN_GROUP_NAME, m.domainGroup, BCConstants().STORAGE.CACHE)
-        m.storageManager.saveDataJSON(BCConstants().STORAGE.BC_PROFILE_PROPERTIES_NAME, m.properties, BCConstants().STORAGE.CACHE)
-    end sub
     ' Retrieves the property ids for the properties in the cache.
     '
     ' @return A list of property ids.
     instance.getPropertiesIds = function() as object
-        return m.properties.keys()
+        if m.properties = invalid or Type(m.properties) <> "roAssociativeArray"
+            return []
+        end if
+        keys = m.properties.keys()
+        if keys = invalid
+            return []
+        end if
+        return keys
     end function
     ' Returns the hash for all properties in a map. Entries are separated by a ';'.
     '
@@ -81,12 +100,18 @@ function __BCCache_builder()
         if m.properties = invalid
             return ""
         end if
+        propertyKeys = m.properties.keys()
+        if propertyKeys = invalid or propertyKeys.count() = 0
+            return ""
+        end if
         hashString = ""
-        for each key in m.properties.keys()
-            value = m.properties[key]
-            propertyHash = m._getPropertyHash(key, value)
-            if propertyHash <> ""
-                hashString = hashString + propertyHash + m.SEPARATOR
+        for each key in propertyKeys
+            if key <> invalid and key <> ""
+                value = m.properties[key]
+                propertyHash = m._getPropertyHash(key, value)
+                if propertyHash <> ""
+                    hashString = hashString + propertyHash + m.SEPARATOR
+                end if
             end if
         end for
         return hashString
@@ -113,6 +138,9 @@ function __BCCache_builder()
     ' @param input The string to hash.
     ' @return An integer representing the hash of the string.
     instance._getStringHash = function(input as string) as integer
+        if Len(input) = 0
+            return 0
+        end if
         hash = 0
         for i = 0 to Len(input) - 1
             hash = hash + Asc(Mid(input, i + 1, 1))

@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 `BlueConicClient` adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] 2025-11-04
+
+### Fixed
+ - Fixed issue with plugin classes not registering correctly, specifically listeners.
+ - Fixed crash happening when processing listener services.
+ - Fixed crash when when processing commands from the SDK service.
+ - Added several checks to prevent crashes to plugins and event processing.
+
 ## [1.1.1] 2025-11-03
 
 ### Fixed

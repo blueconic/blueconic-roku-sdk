@@ -68,6 +68,12 @@ function __BCEventServiceBase_builder()
     ' @param eventName Classname of the event.
     ' @param rule The JSON Object representing the rule as defined in the listener.
     instance.addRuleToMap = sub(eventName as string, rule as object)
+        if m._eventMapping = invalid or Type(m._eventMapping) <> "roAssociativeArray"
+            m._eventMapping = {}
+        end if
+        if eventName = invalid or eventName = ""
+            return
+        end if
         rules = m._eventMapping[eventName]
         if rules <> invalid then
             rules.push(rule)
@@ -81,16 +87,35 @@ function __BCEventServiceBase_builder()
     ' This method should be called once all event rules have been registered and the component is
     ' ready to handle incoming events.
     instance.subscribeListeners = sub()
+        if m._client = invalid
+            BCLogWarning("Client is invalid, cannot subscribe listeners")
+            return
+        end if
         eventManager = m._client.eventManager()
+        if eventManager = invalid
+            BCLogWarning("Event manager is invalid, cannot subscribe listeners")
+            return
+        end if
+        if m._eventMapping = invalid
+            return
+        end if
         for each className in m._eventMapping
-            eventManager.subscribe(className, m.handleEvent, false, m._listenerUUID)
+            if className <> invalid and className <> ""
+                eventManager.subscribe(className, m.handleEvent, false, m._listenerUUID)
+            end if
         end for
     end sub
     ' Returns the applicable rules for an event.
     '
     ' @param event The event
     ' @return the applicable rules for the event, possibly invalid
-    instance.getRules = function(event as object) as object
+    instance.getRules = function(event as object) as dynamic
+        if event = invalid
+            return invalid
+        end if
+        if not event.doesExist("name") or event.name = invalid
+            return invalid
+        end if
         eventClassName = event.name
         rules = m._eventMapping[eventClassName]
         if rules <> invalid then
@@ -215,7 +240,7 @@ function __BCEventServiceBase_builder()
     ' @param node The current node to process
     ' @param allViews The array to collect nodes into (passed by reference)
     instance._collectAllNodesRecursive = sub(node as object, allViews as object)
-        if node = invalid then
+        if node = invalid or allViews = invalid
             return
         end if
         allViews.push(node)
@@ -257,7 +282,9 @@ function __BCEventServiceBase_builder()
         end if
         content = ""
         for each str in contentList
-            content += " " + LCase(str)
+            if str <> invalid and Type(str) = "roString"
+                content += " " + LCase(str)
+            end if
         end for
         ruleType = rule.lookupCI(m._TAG_RULE_TYPE)
         if matchingType = m._EMPTY and content.trim() = "" then
@@ -301,15 +328,39 @@ function __BCEventServiceBase_builder()
     ' @return an array of strings, possibly empty
     instance._getStringList = function(jsonArray as object) as object
         result = []
-        if jsonArray = invalid or jsonArray.count() = 0 then
+        if jsonArray = invalid then
             return result
         end if
-        for i = 0 to jsonArray.count() - 1
-            item = jsonArray[i]
-            if item <> invalid then
-                result.push(item.toStr())
+        arrayType = Type(jsonArray)
+        if arrayType = "roArray" then
+            if jsonArray.count() = 0 then
+                return result
             end if
-        end for
+            for each item in jsonArray
+                if item <> invalid then
+                    if Type(item) = "roString" then
+                        result.push(item)
+                    else
+                        result.push(item.toStr())
+                    end if
+                end if
+            end for
+        else if arrayType = "roAssociativeArray" then
+            BCLogWarning("Received associative array instead of indexed array, processing values")
+            for each key in jsonArray
+                item = jsonArray[key]
+                if item <> invalid then
+                    if Type(item) = "roString" then
+                        result.push(item)
+                    else
+                        result.push(item.toStr())
+                    end if
+                end if
+            end for
+        else
+            BCLogWarning("Expected roArray but received: " + arrayType)
+            return result
+        end if
         return result
     end function
     ' Returns the current time as a string.
@@ -336,16 +387,22 @@ function __BCEventServiceBase_builder()
     ' @param rule The rule object containing the profile property information.
     ' @return the profile property as a string, or an empty string if not found
     instance._getProfileProperty = function(rule as object) as string
-        if rule.doesExist(m._TAG_PROFILE_PROPERTY) then
-            profilePropertyArray = rule.lookupCI(m._TAG_PROFILE_PROPERTY)
-            if profilePropertyArray <> invalid and profilePropertyArray.count() > 0 then
-                profilePropertyObject = profilePropertyArray[0]
-                if profilePropertyObject <> invalid and profilePropertyObject.doesExist(m._TAG_PROFILE_PROPERTY) then
-                    return profilePropertyObject.lookupCI(m._TAG_PROFILE_PROPERTY)
-                end if
-            end if
+        if rule = invalid or not rule.doesExist(m._TAG_PROFILE_PROPERTY)
+            return ""
         end if
-        return ""
+        profilePropertyArray = rule.lookupCI(m._TAG_PROFILE_PROPERTY)
+        if profilePropertyArray = invalid or Type(profilePropertyArray) <> "roArray" or profilePropertyArray.count() = 0
+            return ""
+        end if
+        profilePropertyObject = profilePropertyArray[0]
+        if profilePropertyObject = invalid or not profilePropertyObject.doesExist(m._TAG_PROFILE_PROPERTY)
+            return ""
+        end if
+        propertyValue = profilePropertyObject.lookupCI(m._TAG_PROFILE_PROPERTY)
+        if propertyValue = invalid
+            return ""
+        end if
+        return propertyValue
     end function
     ' Returns the merge strategy for the rule.
     '
